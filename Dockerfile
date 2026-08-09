@@ -53,9 +53,9 @@ RUN apt-get install -y node-corepack
 
 RUN corepack enable
 
-RUN npm -g install typescript prettier vite react react-dom react-scripts vuejs nextjs
+RUN npm -g update && npm -g install typescript prettier vite react react-dom react-scripts vuejs nextjs nvm
 
-RUN npm install --global typst
+RUN npm install --g typst 
 
 RUN apt-get install -y python3-jinja2 python3-yaml yamllint xmlindent xmlstarlet xmlformat-doc xmldiff xml-core xml-rs pipx
 
@@ -81,9 +81,9 @@ RUN curl -L -o kuml.zip https://github.com/kuml-dev/kUML/releases/download/${KUM
 #     cpan install Devel::Camelcadedb && \
 #     cpan install Net::Server::Log::Log::Log4perl #TODO:Fix tests error / downgrade package?
 
-# RUN apt-get install -y saxon-java
+RUN apt-get install -y libsaxonhe-java
 
-RUN chown -R pascal:users /home/pascal && chmod -R 777 /home/pascal
+RUN chown -R pascal:users /home/pascal && chmod -R 755 /home/pascal
 
 USER $USER:users
 

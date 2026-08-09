@@ -1,2 +1,6 @@
+#!/bin/bash
+
+DOCKER=podman
+
 # echo login using the CLI personal access token
-podman login -uoceanborn -p<pat> docker.io
+${DOCKER} login -uoceanborn -p<pat> docker.io

@@ -6,6 +6,6 @@ DOCKER=podman
 $DOCKER buildx build . -t oceanborn/devtools
 
 
-$DOCKER push oceanborn/devtools
+#$DOCKER push oceanborn/devtools
 #$DOCKER push oceanborn/devtools docker.io
 

@@ -1,10 +1,12 @@
 #!/bin/bash
 
+DOCKER=podman
+
 # cleanup : optional - can be commented out
-docker container rm devtools --force --volumes
+${DOCKER} container rm devtools --force --volumes
 
 # obtain an interactive container
-docker run  --name devtools --hostname devtools -it -u $(id -u):$(id -g) -v .:/src
+${DOCKER} run  --name devtools --hostname devtools -it -u $(id -u):$(id -g) -v .:/src
 
 
 

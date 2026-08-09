@@ -1,10 +1,12 @@
 #!/bin/bash
 
+DOCKER=podman
+
 # cleanup
-#docker login
+#${DOCKER} login
 
-#docker container rm devtools --force --volumes
+#${DOCKER} container rm devtools --force --volumes
 
-docker run --name devtools --hostname devtools -it -u $(id -u):$(id -g) -v .:/src devtools
+${DOCKER} run --name devtools --hostname devtools -it -u $(id -u):$(id -g) -v .:/src devtools
 
 
