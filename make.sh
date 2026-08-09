@@ -1,10 +1,11 @@
 #!/bin/bash
 
+DOCKER=podman
+
 # build the container
-docker buildx build . -t oceanborn/devtools
-
-#docker push oceanborn/devtools
+$DOCKER buildx build . -t oceanborn/devtools
 
 
-
+$DOCKER push oceanborn/devtools
+#$DOCKER push oceanborn/devtools docker.io
 

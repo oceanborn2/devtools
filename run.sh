@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # cleanup
-docker login
+#docker login
 
 #docker container rm devtools --force --volumes
 

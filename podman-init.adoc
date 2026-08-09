@@ -1,0 +1,75 @@
+:title: devtools notes
+:author: Pascal Munerot
+:email: pascal.munerot@gmail.com
+
+== Apple containers
+[source, bash]
+----
+container ls
+
+----
+
+== Podman
+
+
+[source, bash]
+----
+#brew install podman podman-desktop
+podman init
+# TODO: Add command output
+# Creates default
+# Error: machine "podman-machine-default" already exists
+
+# https://chat.mistral.ai/chat/49567575-096a-42fb-913f-3705f1d8b220[Mistral conversation]
+podman machine ssh
+# copy from mistral conversation below and into a new (if it does not exists) registries.conf
+
+
+
+podman login docker.io # must have configured /etc/containers/registries.conf
+
+----
+
+
+
+== Appendices
+
+=== Podman
+
+==== Podman init
+
+[source, bash]
+----
+% podman machine init --help
+Initialize a virtual machine
+
+Description:
+Initialize a virtual machine
+
+Usage:
+podman machine init [options] [NAME]
+
+Examples:
+podman machine init podman-machine-default
+
+Options:
+--cpus uint              Number of CPUs (default 5)
+--disk-size uint         Disk size in GiB (default 100)
+--ignition-path string   Path to ignition file
+--image string           Bootable image for machine (default "docker://quay.io/podman/machine-os")
+--import-native-ca       Import the host trusted CA certificates into the machine
+-m, --memory uint            Memory in MiB (default 2048)
+--now                    Start machine now
+--playbook string        Run an Ansible playbook after first boot
+--provider string        Override the default machine provider
+--rootful                Whether this machine should prefer rootful container execution
+-s, --swap uint              Swap in MiB
+--timezone string        Set timezone (default "local")
+--tls-verify             Require HTTPS and verify certificates when contacting registries (default true)
+-u, --update-connection      Set default system connection for this machine
+--usb stringArray        USB Host passthrough: bus=$1,devnum=$2 or vendor=$1,product=$2
+--user-mode-networking   Whether this machine should use user-mode networking, routing traffic through a host user-space process
+--username string        Username used in image (default "core")
+-v, --volume stringArray     Volumes to mount, source:target (default [/Users:/Users,/private:/private,/var/folders:/var/folders,/Users/admin/.config/containers:/etc/containers])
+----
+
