@@ -1,6 +1,11 @@
 #!/bin/bash
 
-DOCKER=podman
+source ./.env/config.sh
+echo login using the CLI personal access token
+echo $PAT | ${DOCKER} login -u${USR} ${REG} --password-stdin --authfile ~/.config/containers/auth.json
 
-# echo login using the CLI personal access token
-${DOCKER} login -uoceanborn -p<pat> docker.io
+export DOCKER
+export IMAGE
+export REG
+export USR
+#export PAT
