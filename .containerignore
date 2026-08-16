@@ -1,0 +1,81 @@
+!lib/kuml.zip
+
+# Environment and log files
+.env
+*.log
+
+# Version control
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Build outputs
+build
+dist
+out
+target
+**/build
+**/dist
+**/out
+**/target
+
+# Javascript
+node_modules
+**/node_modules
+.npm
+.npmrc
+
+# Python
+__pycache__
+**/__pycache__
+*.pyc
+*.pyo
+
+.venv
+venv
+
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Go
+vendor
+*.test
+*.out
+
+# Temporary files
+tmp
+temp
+*.tmp
+*.log
+
+# Archives
+# kuml.zip must remain available because the Dockerfile explicitly COPYs it.
+# ----------------------------------------------------------------------
+
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+
+
+
+# ----------------------------------------------------------------------
+# Docker / Podman build files themselves usually do not need to enter /src
+# ----------------------------------------------------------------------
+
+Dockerfile
+Containerfile
+.containerignore
+.dockerignore
+

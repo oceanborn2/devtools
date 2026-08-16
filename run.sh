@@ -1,12 +1,11 @@
 #!/bin/bash
 
-DOCKER=podman
+source ./.env/config.sh
 
-# cleanup
-#${DOCKER} login
+$DOCKER pull ${REG}/${USR}/${IMAGE}:latest
 
-#${DOCKER} container rm devtools --force --volumes
+${DOCKER} container rm ${IMAGE} --force --volumes
 
-${DOCKER} run --name devtools --hostname devtools -it -u $(id -u):$(id -g) -v .:/src devtools
+CMD="${DOCKER} run --name ${IMAGE} --hostname ${IMAGE} -it -u$(id -u):$(id -g) -v .:/src ${REG}/${USR}/${IMAGE}:latest"
 
-
+eval $CMD

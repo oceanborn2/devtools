@@ -1,12 +1,9 @@
 #!/bin/bash
 
-DOCKER=podman
+source ./.env/config.sh
 
 # cleanup : optional - can be commented out
-${DOCKER} container rm devtools --force --volumes
+${DOCKER} container rm ${IMAGE} --force --volumes
 
 # obtain an interactive container
-${DOCKER} run  --name devtools --hostname devtools -it -u $(id -u):$(id -g) -v .:/src
-
-
-
+${DOCKER} exec ${IMAGE} -it -u $(id -u):$(id -g) -v .:/src ${USR}/${IMAGE}:latest
