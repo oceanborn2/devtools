@@ -1,11 +1,26 @@
 #!/bin/bash
 
+RUNLOC=1
+#CLEAN=0
+
 source ./.env/config.sh
 
-$DOCKER pull ${REG}/${USR}/${IMAGE}:latest
+if [[ ! $RUNLOC ]];
+then
+  $DOCKER pull "${REG}/${USR}/${IMAGE}:latest"
+else
+  REG=localhost
+fi
 
-${DOCKER} container rm ${IMAGE} --force --volumes
+#if [[ $CLEAN -eq 0 ]]; then
+#  {DOCKER} container rm ${IMAGE} --force --volumes
+#fi
 
-CMD="${DOCKER} run --name ${IMAGE} --hostname ${IMAGE} -it -u$(id -u):$(id -g) -v .:/src ${REG}/${USR}/${IMAGE}:latest"
+CMD="${DOCKER} run --rm -it --name ${IMAGE} \
+  --hostname ${IMAGE} \
+  --volume .:/src \
+  ${REG}/${USR}/${IMAGE}:latest" #  -u$(id -u):$(id -g)
 
-eval $CMD
+echo "running : ${CMD}"
+
+eval "$CMD"

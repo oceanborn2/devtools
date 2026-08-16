@@ -1,66 +1,162 @@
-FROM ubuntu:latest
+FROM ubuntu:24.04
 
-LABEL authors="pmunerot" maintainer="Pascal Munerot <pascal.munerot@gmail.com>"
+LABEL authors="pmunerot" \
+      maintainer="Pascal Munerot <pascal.munerot@gmail.com>" \
+      description="Development and documentation tools image" \
+      version="1.0"
 
-LABEL description="docker image with a selection of development and documentation tools"
-
-LABEL version="1.0"
-
-ENV ENCODING=fr_FR.utf8
-
+# Build arguments
 ARG language=en
-
 ARG groupname=users
-
 ARG username=pascal
-
-ARG pass=password
-
-ARG TIMEZONE="Europe/Paris"
-
+ARG timezone="Europe/Paris"
 ARG kuml_ver
 
-ENV LANGUAGE=$language
+# Environment
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANGUAGE=${language} \
+    LANG=fr_FR.UTF-8 \
+    LC_ALL=fr_FR.UTF-8 \
+    TZ=${timezone} \
+    JAVA_FONTS=/usr/share/fonts/TTF \
+    GOPATH=/home/${username}/go \
+    HOME=/home/${username}
 
-#USER $username:$groupname
+ENV PATH="${PATH}:${GOPATH}/bin:/opt/kuml/bin:/usr/local/bin:${HOME}/.local/bin:"
 
-RUN useradd $username -m
+# Base OS + development + documentation packages
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y \
+        bash \
+        ca-certificates \
+        netbase \
+        iputils-ping \
+        curl \
+        file \
+        sudo \
+        git \
+        unzip \
+        locales \
+        tzdata \
+        micro \
+        vim \
+        jq \
+        coreutils \
+        default-jre \
+        python3 \
+        python3-pip \
+        pipx \
+        python3-poetry \
+        python3-jinja2 \
+        python3-yaml \
+        yamllint \
+        golang \
+        delve \
+        npm \
+        nodejs \
+        ruby \
+        pandoc \
+        graphviz \
+        hugo \
+        plantuml \
+        libsaxonhe-java \
+        xmlindent \
+        xmlstarlet \
+        xmlformat-doc \
+        xmldiff \
+        xml-core \
+        xml-rs \
+        wget \
+        micro \
+        bat \
+        fzf \
+        ripgrep \
+        nmap \
+    && locale-gen fr_FR.UTF-8 \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf /var/cache/apt/*
 
-RUN echo "$username:$pass" | chpasswd
 
-ENV HOME=/home/$username
+# Ruby documentation tools
+RUN gem install --no-document \
+        asciidoctor \
+        asciidoctor-pdf \
+        pygments.rb \
+        coderay \
+    && gem cleanup
 
-#RUN chown -R pascal:$groupname /home/$username && chmod -R 755 /home/$username
+# Python tools
+RUN pipx install uv && \
+    pipx install ruff && \
+    pipx install poetry
 
-ENV DEBIAN_FRONTEND=noninteractive
+# Node / Javascript tools
+RUN npm install --global \
+        @openapitools/openapi-generator-cli \
+        corepack \
+        typescript \
+        prettier \
+        vite \
+        typst && \
+        corepack enable && \
+        npm cache clean --force
 
-RUN apt-get update -y && \
-    apt-get upgrade -y && \
-    apt-get install --no-install-recommends -y curl file micro vim jq xh coreutils default-jre
+# Directories
+RUN mkdir -p \
+        /usr/share/fonts/TTF \
+        /opt/kuml
 
-RUN apt-get install  --no-install-recommends -y python3 python3-pip pipx  python3-poetry python3-jinja2 python3-yaml yamllint golang delve
+# Fonts
+COPY fonts/*.ttf /usr/share/fonts/TTF/
 
-RUN apt-get install  --no-install-recommends -y npm nodejs node-corepack && corepack enable
+# kUML
+# The ZIP is copied explicitly instead of relying on COPY . .
+COPY lib/kuml.zip /tmp/kuml.zip
 
-RUN apt-get install  --no-install-recommends -y ruby pandoc graphviz hugo plantuml libsaxonhe-java xmlindent xmlstarlet xmlformat-doc xmldiff xml-core xml-rs && \
-    gem install asciidoctor asciidoctor-pdf  pygments.rb coderay
+RUN mkdir -p /tmp/kuml /opt/kuml \
+    && unzip -q /tmp/kuml.zip -d /tmp/kuml \
+    && cp -a /tmp/kuml/kuml-*/. /opt/kuml/ \
+    && rm -rf /tmp/kuml /tmp/kuml.zip
 
-RUN apt-get clean
+# yq and other golang tools
+RUN go install github.com/mikefarah/yq/v4@latest # &&   go get -tool github.com/ogen-go/ogen/cmd/ogen@latest &&  go get -tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
 
-RUN npm -g update && npm -g install typescript prettier vite react react-dom \
-    react-scripts vuejs nextjs nvm openapi-generator openapi-generator-cli typst && \
-    rm -rf /var/cache/npm
+# install XH http tooling
+RUN XH_VERSION=$(curl -s "https://api.github.com/repos/ducaale/xh/releases/latest" | grep -Po '"tag_name": "v\K[0-9.]+') && \
+    echo "XH_VERSION: ${XH_VERSION}" && \
+    wget -qO xh.tar.gz https://github.com/ducaale/xh/releases/latest/download/xh-v$XH_VERSION-x86_64-unknown-linux-musl.tar.gz && \
+    mkdir xh-temp && \
+    tar xf xh.tar.gz --strip-components=1 -C xh-temp && \
+    mv xh-temp/xh /usr/local/bin && \
+    rm -rf xh.tar.gz xh-temp
 
+# User
+RUN if ! getent group "${groupname}" >/dev/null; then \
+        groupadd "${groupname}"; \
+    fi \
+    && useradd \
+        --create-home \
+        --shell /bin/bash \
+        --gid "${groupname}" \
+        "${username}" \
+    && mkdir -p "${GOPATH}" \
+    && chown -R "${username}:${groupname}" \
+        "/home/${username}" \
+        /opt/kuml
 
-RUN mkdir -p /usr/share/fonts/TTF /opt/kmul /opt/plantuml
+RUN chown -R ${username}:${groupname} /home/$username && chmod -R 755 /home/$username
 
-COPY fonts/*.ttf /usr/share/fonts/TTF
+RUN printf '#!/bin/bash\njava -jar /usr/bin/plantuml.jar $@' > /usr/bin/plantuml && chmod +x /usr/bin/plantuml
 
-ENV JAVA_FONTS="/usr/share/fonts/TTF"
+WORKDIR /home/$username
 
-# RUN mkdir -p && mkdir -p
+# Runtime user
+USER ${username}
 
-    # RUN apt-get install -y perl && \
+CMD ["/bin/bash"]
+
+##########################################################################
+# RUN apt-get install -y perl && \
     #     cpan install YAML && \
     #     cpan install PadWalker && \
     #     cpan install File::Find && \
@@ -69,38 +165,6 @@ ENV JAVA_FONTS="/usr/share/fonts/TTF"
     #     cpan install Devel::Camelcadedb && \
     #     cpan install Net::Server::Log::Log::Log4perl #TODO:Fix tests error / downgrade package?
 
-RUN pipx install uv ruff && pip cache purge
-
-#RUN printf '#!/bin/bash\njava -jar /usr/bin/plantuml.jar $@' > /usr/bin/plantuml && chmod +x /usr/bin/plantuml
-
 #ENV PLANTUML_BIN="/usr/bin/plantuml"
-
-#COPY /usr/bin/plantuml .
-
-#ENV JAVA_HOME=
-#&& \    rm -rf /var/lib/apt/lists/*
-
-COPY lib/kuml.zip .
-
-RUN unzip ./kuml.zip -d /opt/kuml
-
-#RUN curl -L -o kuml.zip https://github.com/kuml-dev/kUML/releases/download/v${KUML_VER}/kuml-runtime-${KUML_VER}-darwin-arm64.zip  && unzip kuml.zip -o -d /opt/kuml && export PATH="/opt/kuml/bin:$PATH" && rm -f kuml.zip
-
-RUN chown -R pascal:$groupname /home/$username && chmod -R 755 /home/$username
-
-COPY . .
-
-ENV PATH=$PATH:$GOPATH/bin:/opt/kuml/bin
-
-
-#RUN go install github.com/mikefarah/yq/v4@latest
     #&& go install goa.design/goa/v3/cmd/goa@latest \
     #&& go install github.com/fyne/fyne@latest \
-    #&& go install -tool github.com/ogen-go/ogen/cmd/ogen@latest \
-    #&& go install -tool github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
-
-WORKDIR /src
-
-#RUN chdir /home/$username
-
-ENTRYPOINT ["/bin/bash", ""]
