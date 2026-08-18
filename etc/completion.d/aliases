@@ -1,0 +1,13 @@
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+alias lh='ls -lh'
+alias ga='git add'
+alias gc='git commit'
+alias gco='git checkout'
+alias g='git'
+alias m='micro'
+alias mk='make'
+
+
+alias puml='plantuml -Djava.awt.headless=true'

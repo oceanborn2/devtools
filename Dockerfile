@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM ubuntu:26.10
 
 LABEL authors="pmunerot" \
       maintainer="Pascal Munerot <pascal.munerot@gmail.com>" \
@@ -6,7 +6,9 @@ LABEL authors="pmunerot" \
       version="1.0"
 
 # Build arguments
-ARG language=en
+ARG language=fr
+ARG language_ext="fr_FR.UTF-8"
+ARG language_all="fr_FR"
 ARG groupname=users
 ARG username=pascal
 ARG timezone="Europe/Paris"
@@ -15,18 +17,17 @@ ARG kuml_ver
 # Environment
 ENV DEBIAN_FRONTEND=noninteractive \
     LANGUAGE=${language} \
-    LANG=fr_FR.UTF-8 \
-    LC_ALL=fr_FR.UTF-8 \
+    LANG=${language_ext} \
     TZ=${timezone} \
     JAVA_FONTS=/usr/share/fonts/TTF \
     GOPATH=/home/${username}/go \
     HOME=/home/${username}
 
-ENV PATH="${PATH}:${GOPATH}/bin:/opt/kuml/bin:/usr/local/bin:${HOME}/.local/bin:"
+ENV PATH="${PATH}:${GOPATH}/bin:/opt/kuml/bin:/usr/local/bin:${HOME}/.local/bin:${HOME}/.sdkman/bin"
 
 # Base OS + development + documentation packages
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
+RUN apt-get update -qq -y \
+    && apt-get install --no-install-recommends -y -qq \
         bash \
         ca-certificates \
         netbase \
@@ -35,7 +36,9 @@ RUN apt-get update \
         file \
         sudo \
         git \
+        zip \
         unzip \
+        p7zip \
         locales \
         tzdata \
         micro \
@@ -72,10 +75,15 @@ RUN apt-get update \
         fzf \
         ripgrep \
         nmap \
-    && locale-gen fr_FR.UTF-8 \
+#&& \
+# sed -i \
+#             -e 's/^# *fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/' \
+#             -e 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' \
+#             -e 's/^# *en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' \
+#             /etc/locale.gen \
+    && locale-gen fr_FR.UTF-8  en_US.UTF-8 en_GB.UTF-8 \
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /var/cache/apt/*
-
 
 # Ruby documentation tools
 RUN gem install --no-document \
@@ -92,13 +100,10 @@ RUN pipx install uv && \
 
 # Node / Javascript tools
 RUN npm install --global \
-        @openapitools/openapi-generator-cli \
-        corepack \
         typescript \
         prettier \
         vite \
         typst && \
-        corepack enable && \
         npm cache clean --force
 
 # Directories
@@ -130,6 +135,20 @@ RUN XH_VERSION=$(curl -s "https://api.github.com/repos/ducaale/xh/releases/lates
     mv xh-temp/xh /usr/local/bin && \
     rm -rf xh.tar.gz xh-temp
 
+
+# OpenAPI Generator
+ARG OPENAPI_GENERATOR_VERSION=7.23.0
+
+RUN curl -fsSL \
+      "https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/${OPENAPI_GENERATOR_VERSION}/openapi-generator-cli-${OPENAPI_GENERATOR_VERSION}.jar" \
+      -o /opt/openapi-generator-cli.jar \
+ && printf '%s\n' \
+      '#!/bin/sh' \
+      'exec java -jar /opt/openapi-generator-cli.jar "$@"' \
+      > /usr/local/bin/openapi-generator-cli \
+ && chmod 755 /usr/local/bin/openapi-generator-cli \
+ && openapi-generator-cli version
+
 # User
 RUN if ! getent group "${groupname}" >/dev/null; then \
         groupadd "${groupname}"; \
@@ -146,12 +165,20 @@ RUN if ! getent group "${groupname}" >/dev/null; then \
 
 RUN chown -R ${username}:${groupname} /home/$username && chmod -R 755 /home/$username
 
-RUN printf '#!/bin/bash\njava -jar /usr/bin/plantuml.jar $@' > /usr/bin/plantuml && chmod +x /usr/bin/plantuml
+COPY /etc /etc
 
 WORKDIR /home/$username
 
 # Runtime user
 USER ${username}
+
+# SDKMAN
+RUN curl -s "https://get.sdkman.io" | bash ; \
+    echo $HOME \
+    chmod a+x "$HOME/.sdkman/bin/sdkman-init.sh" && \
+    bash "$HOME/.sdkman/bin/sdkman-init.sh"
+
+#RUN sdk install maven gradle kotlin
 
 CMD ["/bin/bash"]
 
@@ -165,6 +192,6 @@ CMD ["/bin/bash"]
     #     cpan install Devel::Camelcadedb && \
     #     cpan install Net::Server::Log::Log::Log4perl #TODO:Fix tests error / downgrade package?
 
-#ENV PLANTUML_BIN="/usr/bin/plantuml"
+
     #&& go install goa.design/goa/v3/cmd/goa@latest \
     #&& go install github.com/fyne/fyne@latest \
